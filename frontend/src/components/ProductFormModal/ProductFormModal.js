@@ -32,7 +32,7 @@ const ProductFormModal = ({ isOpen, onClose, onCreate }) => {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await API.post("/api/products/upload-image", formData, {
+      const res = await api.post("/api/products/upload-image", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
