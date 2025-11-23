@@ -10,6 +10,15 @@ const ProductTable = ({
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
+  const BACKEND_URL = "https://inventory-management-app-backend-gn9n.onrender.com";
+
+  // Smart image function
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img; // external URL
+    return `${BACKEND_URL}${img}`; // backend upload
+  };
+
   const startEdit = (product) => {
     setEditingId(product.id);
     setEditData(product);
@@ -62,7 +71,11 @@ const ProductTable = ({
             >
               <td>
                 {p.image ? (
-                  <img src={p.image} alt="" className="product-img" />
+                  <img
+                    src={getImageUrl(p.image)}
+                    className="product-img"
+                    alt={p.name}
+                  />
                 ) : (
                   "-"
                 )}

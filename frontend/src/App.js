@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import api from './api';
-import ProductTable from './components/ProductTable/ProductTable';
-import InventorySidebar from './components/InventorySideBar/InventorySideBar';
-import ProductFormModal from './components/ProductFormModal/ProductFormModal';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import api from "./api";
+import ProductTable from "./components/ProductTable/ProductTable";
+import InventorySidebar from "./components/InventorySideBar/InventorySideBar";
+import ProductFormModal from "./components/ProductFormModal/ProductFormModal";
+import "./App.css";
 
 function App() {
   const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [history, setHistory] = useState([]);
   const [importResult, setImportResult] = useState(null);
@@ -16,13 +16,14 @@ function App() {
 
   const fetchProducts = async () => {
     try {
-      const params = {};
-      if (category && category !== 'All') params.category = category;
-      const res = await api.get('/api/products', { params });
+      const res = await api.get("/api/products", {
+        params: category !== "All" ? { category } : {}
+      });
+
       setProducts(res.data);
     } catch (err) {
       console.error(err);
-      alert('Failed to load products');
+      alert("Failed to load products");
     }
   };
 
@@ -36,11 +37,9 @@ function App() {
     }
   };
 
-  
   useEffect(() => {
     fetchProducts();
   }, [category]);
-
 
   useEffect(() => {
     const delay = setTimeout(async () => {
@@ -48,8 +47,9 @@ function App() {
         fetchProducts();
         return;
       }
+
       try {
-        const res = await api.get('/api/products/search', {
+        const res = await api.get("/api/products/search", {
           params: { name: search }
         });
         setProducts(res.data);
@@ -57,20 +57,26 @@ function App() {
         console.error(err);
       }
     }, 400);
+
     return () => clearTimeout(delay);
- 
   }, [search]);
 
-  const categories = ['All', ...new Set(products.map((p) => p.category).filter(Boolean))];
+  const categories = [
+    "All",
+    ...new Set(products.map((p) => p.category).filter(Boolean))
+  ];
 
   const handleUpdateProduct = async (id, data) => {
     try {
-      const payload = { ...data, changedBy: 'admin@example.com' };
+      const payload = { ...data, changedBy: "admin@example.com" };
       const res = await api.put(`/api/products/${id}`, payload);
+
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? res.data : p))
       );
-      alert('Product updated');
+
+      alert("Product updated");
+
       if (selectedProduct && selectedProduct.id === id) {
         setSelectedProduct(res.data);
         fetchHistory(id);
@@ -79,23 +85,26 @@ function App() {
       console.error(err);
       alert(
         err.response?.data?.error ||
-        'Failed to update product (maybe duplicate name?)'
+          "Failed to update product (maybe duplicate name?)"
       );
     }
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Delete this product?')) return;
+    if (!window.confirm("Delete this product?")) return;
+
     try {
       await api.delete(`/api/products/${id}`);
+
       setProducts((prev) => prev.filter((p) => p.id !== id));
+
       if (selectedProduct && selectedProduct.id === id) {
         setSelectedProduct(null);
         setHistory([]);
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to delete product');
+      alert("Failed to delete product");
     }
   };
 
@@ -105,68 +114,68 @@ function App() {
   };
 
   const handleImportClick = () => {
-    document.getElementById('csvInput').click();
+    document.getElementById("csvInput").click();
   };
 
   const handleImportChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
-    formData.append('csvFile', file);
+    formData.append("csvFile", file);
 
     try {
-      const res = await api.post('/api/products/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const res = await api.post("/api/products/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
+
       setImportResult(res.data);
-      alert(
-        `Imported: added=${res.data.added}, skipped=${res.data.skipped}`
-      );
+      alert(`Imported: added=${res.data.added}, skipped=${res.data.skipped}`);
+
       fetchProducts();
     } catch (err) {
       console.error(err);
-      alert('Import failed');
+      alert("Import failed");
     } finally {
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
   const handleExport = () => {
     api
-      .get('/api/products/export', { responseType: 'blob' })
+      .get("/api/products/export", { responseType: "blob" })
       .then((res) => {
         const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        link.setAttribute('download', 'products.csv');
+        link.setAttribute("download", "products.csv");
         document.body.appendChild(link);
         link.click();
         link.remove();
       })
       .catch((err) => {
         console.error(err);
-        alert('Export failed');
+        alert("Export failed");
       });
   };
 
   const handleCreateProduct = async (data) => {
     try {
-      const res = await api.post('/api/products', data);
+      const res = await api.post("/api/products", data);
       setProducts((prev) => [...prev, res.data]);
       setIsModalOpen(false);
-      alert('Product created');
+      alert("Product created");
     } catch (err) {
       console.error(err);
       alert(
         err.response?.data?.error ||
-        'Failed to create product (maybe duplicate name?)'
+          "Failed to create product (maybe duplicate name?)"
       );
     }
   };
 
   return (
     <div className="app">
-    
       <header className="app-header">
         <div className="header-left">
           <input
@@ -186,9 +195,7 @@ function App() {
             ))}
           </select>
 
-          <button onClick={() => setIsModalOpen(true)}>
-            Add New Product
-          </button>
+          <button onClick={() => setIsModalOpen(true)}>Add New Product</button>
         </div>
 
         <div className="header-right">
@@ -196,15 +203,15 @@ function App() {
             id="csvInput"
             type="file"
             accept=".csv"
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
             onChange={handleImportChange}
           />
+
           <button onClick={handleImportClick}>Import</button>
           <button onClick={handleExport}>Export</button>
         </div>
       </header>
 
-      
       <div className="app-body">
         <div className="table-container">
           <ProductTable

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./ProductFormModal.css";
+import api from "../../api";
 
 const ProductFormModal = ({ isOpen, onClose, onCreate }) => {
   const [form, setForm] = useState({
@@ -12,10 +13,36 @@ const ProductFormModal = ({ isOpen, onClose, onCreate }) => {
     image: ""
   });
 
+  const [uploading, setUploading] = useState(false);
+
   if (!isOpen) return null;
 
   const handleChange = (e, field) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await API.post("/api/products/upload-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      setForm((prev) => ({ ...prev, image: res.data.imageUrl }));
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -34,7 +61,20 @@ const ProductFormModal = ({ isOpen, onClose, onCreate }) => {
           <option>Out of Stock</option>
         </select>
 
-        <input placeholder="Image URL" onChange={(e) => handleChange(e, "image")} />
+        
+        <label className="upload-label">
+          Upload Image:
+          <input type="file" accept="image/*" onChange={handleImageUpload} />
+        </label>
+
+        
+        <input
+          placeholder="Image URL (optional)"
+          onChange={(e) => handleChange(e, "image")}
+          value={form.image}
+        />
+
+        {uploading && <p style={{ color: "blue" }}>Uploading image...</p>}
 
         <div className="modal-buttons">
           <button onClick={() => onCreate(form)}>Add</button>
